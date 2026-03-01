@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
   <title>Pi Inline Media Test</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
   <style>
@@ -15,9 +15,7 @@
       --text: #e8e8f0;
       --muted: #6b6b80;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -25,385 +23,261 @@
       min-height: 100vh;
       padding: 24px 16px;
     }
-
-    header {
-      text-align: center;
-      margin-bottom: 36px;
-      animation: fadeDown 0.6s ease both;
-    }
-
+    header { text-align:center; margin-bottom:28px; animation:fadeDown 0.6s ease both; }
     header h1 {
-      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-size: clamp(1.5rem,5vw,2.2rem);
       font-weight: 800;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      letter-spacing: -0.5px;
     }
+    header p { font-family:'Space Mono',monospace; font-size:0.7rem; color:var(--muted); margin-top:5px; }
 
-    header p {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-top: 6px;
-    }
-
-    /* Status Badge */
     #status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 8px 16px;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.72rem;
-      margin: 0 auto 32px;
-      display: flex;
-      width: fit-content;
-      margin-left: auto;
-      margin-right: auto;
-      animation: fadeDown 0.6s 0.1s ease both;
+      display:flex; align-items:center; gap:8px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:100px; padding:8px 16px;
+      font-family:'Space Mono',monospace; font-size:0.7rem;
+      width:fit-content; margin:0 auto 24px;
+      animation:fadeDown 0.6s 0.1s ease both;
     }
+    .dot { width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background 0.3s; }
+    .dot.checking  { background:#f5c518; animation:pulse 1s infinite; }
+    .dot.supported { background:#4ade80; }
+    .dot.unsupported { background:var(--accent2); }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-      transition: background 0.3s;
-    }
-    .dot.checking { background: #f5c518; animation: pulse 1s infinite; }
-    .dot.supported { background: #4ade80; }
-    .dot.unsupported { background: var(--accent2); }
-
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    /* Input Section */
     .input-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      animation: fadeUp 0.5s 0.2s ease both;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:16px; padding:16px; margin-bottom:14px;
+      animation:fadeUp 0.5s 0.15s ease both;
     }
-
     .input-section h2 {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--muted);
-      margin-bottom: 14px;
+      font-size:0.74rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:1.4px; color:var(--muted); margin-bottom:10px;
     }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      align-items: stretch;
-    }
-
+    .input-row { display:flex; gap:8px; }
     input[type="text"] {
-      flex: 1;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      color: var(--text);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.78rem;
-      outline: none;
-      transition: border-color 0.2s;
+      flex:1; background:var(--bg); border:1px solid var(--border);
+      border-radius:10px; padding:9px 12px; color:var(--text);
+      font-family:'Space Mono',monospace; font-size:0.74rem;
+      outline:none; transition:border-color 0.2s;
     }
-    input[type="text"]:focus { border-color: var(--accent); }
-    input[type="text"]::placeholder { color: var(--muted); }
-
+    input:focus { border-color:var(--accent); }
+    input::placeholder { color:var(--muted); }
     button {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 18px;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 0.82rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity 0.2s, transform 0.1s;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff; border:none; border-radius:10px;
+      padding:9px 15px; font-family:'Syne',sans-serif;
+      font-weight:700; font-size:0.8rem; cursor:pointer;
+      white-space:nowrap; transition:opacity 0.2s,transform 0.1s;
     }
-    button:active { opacity: 0.85; transform: scale(0.97); }
+    button:active { opacity:0.85; transform:scale(0.97); }
 
-    /* Media Container */
-    #media-container {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      animation: fadeUp 0.5s 0.3s ease both;
-    }
+    #media-container { display:flex; flex-direction:column; gap:14px; animation:fadeUp 0.5s 0.25s ease both; }
 
     .media-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      position: relative;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:16px; overflow:hidden;
     }
-
     .media-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 14px; border-bottom:1px solid var(--border);
     }
-
     .media-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-family:'Space Mono',monospace; font-size:0.67rem;
+      color:var(--muted); display:flex; align-items:center; gap:6px; min-width:0;
     }
-
+    .media-label span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .type-tag {
-      background: rgba(124,92,252,0.15);
-      color: var(--accent);
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      background:rgba(124,92,252,0.15); color:var(--accent);
+      border-radius:6px; padding:2px 7px; font-size:0.6rem;
+      font-weight:700; text-transform:uppercase; letter-spacing:1px; flex-shrink:0;
     }
-
     .remove-btn {
-      background: transparent;
-      color: var(--muted);
-      padding: 4px 8px;
-      font-size: 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--border);
+      background:transparent; color:var(--muted); padding:3px 8px;
+      font-size:0.7rem; border-radius:6px; border:1px solid var(--border); flex-shrink:0;
     }
-    .remove-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+    .media-content { padding:10px; }
 
-    .media-content { padding: 12px; }
-
-    video, img {
-      width: 100%;
-      border-radius: 10px;
-      display: block;
-      background: var(--bg);
-    }
-
+    /* Video — browser default controls only */
     video {
-      max-height: 260px;
-      object-fit: contain;
-      background: #000;
+      width:100%; border-radius:10px; display:block;
+      background:#000; max-height:260px; object-fit:contain;
     }
 
-    /* YT fullscreen wrapper */
-    .yt-wrap {
-      position: relative;
-      width: 100%;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #000;
-    }
-    .yt-wrap iframe {
-      width: 100%;
-      height: 220px;
-      border: none;
-      display: block;
-    }
-    .yt-fs-btn {
-      position: absolute;
-      bottom: 8px; right: 8px;
-      background: rgba(0,0,0,0.7);
-      border: none;
-      color: #fff;
-      font-size: 0.85rem;
-      padding: 5px 9px;
-      border-radius: 6px;
-      cursor: pointer;
-      z-index: 5;
-      backdrop-filter: blur(4px);
+    /* YouTube — clean iframe only */
+    .yt-wrap { width:100%; border-radius:10px; overflow:hidden; background:#000; }
+    .yt-wrap iframe { width:100%; height:210px; border:none; display:block; }
+
+    /* Single image */
+    .img-wrap img {
+      width:100%; max-height:280px; object-fit:contain;
+      border-radius:10px; display:block; background:var(--bg);
+      cursor:zoom-in; -webkit-touch-callout:none; user-select:none;
     }
 
-    /* Video fullscreen wrapper */
-    .video-wrap {
-      position: relative;
-      width: 100%;
+    /* Carousel */
+    .carousel-wrap {
+      position:relative; width:100%; overflow:hidden;
+      border-radius:10px; background:var(--bg);
+      touch-action:pan-y;
     }
-    .video-wrap video { border-radius: 10px; }
-    .video-fs-btn {
-      position: absolute;
-      bottom: 10px; right: 10px;
-      background: rgba(0,0,0,0.65);
-      border: none;
-      color: #fff;
-      font-size: 0.85rem;
-      padding: 5px 9px;
-      border-radius: 6px;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
+    .carousel-track {
+      display:flex;
+      transition:transform 0.32s cubic-bezier(.4,0,.2,1);
+      will-change:transform;
+    }
+    .carousel-slide { min-width:100%; display:flex; align-items:center; justify-content:center; }
+    .carousel-slide img {
+      width:100%; max-height:280px; object-fit:contain; display:block;
+      background:var(--bg); cursor:zoom-in;
+      -webkit-touch-callout:none; user-select:none; pointer-events:none;
+    }
+    .carousel-count {
+      position:absolute; top:8px; right:10px;
+      background:rgba(0,0,0,0.65); color:#fff;
+      font-family:'Space Mono',monospace; font-size:0.63rem;
+      padding:3px 9px; border-radius:20px; backdrop-filter:blur(6px);
+      pointer-events:none;
+    }
+    .carousel-dots { display:flex; justify-content:center; gap:5px; padding:8px 0 2px; }
+    .c-dot {
+      width:6px; height:6px; border-radius:50%; background:var(--border);
+      transition:background 0.2s,transform 0.2s; cursor:pointer;
+    }
+    .c-dot.active { background:var(--accent); transform:scale(1.35); }
+
+    /* Multi-image url list */
+    .multi-img-list { display:flex; flex-direction:column; gap:5px; margin-bottom:10px; }
+    .multi-img-row {
+      display:flex; align-items:center; gap:6px;
+      background:var(--bg); border:1px solid var(--border);
+      border-radius:8px; padding:5px 10px;
+      font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--muted);
+    }
+    .multi-img-row span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .multi-img-row button {
+      background:transparent; color:var(--accent2);
+      border:none; padding:2px 5px; font-size:0.72rem; border-radius:4px;
     }
 
-    img {
-      max-height: 300px;
-      object-fit: contain;
-      cursor: zoom-in;
-    }
-
-    /* Lightbox */
+    /* Lightbox — full black bg, real pinch zoom */
     #lightbox {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.97);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
+      display:none; position:fixed; inset:0;
+      background:#000; z-index:9999;
+      justify-content:center; align-items:center; overflow:hidden;
     }
-    #lightbox.active { display: flex; }
-
-    #lightbox-img-wrap {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      touch-action: none;
+    #lightbox.active { display:flex; }
+    #lb-close {
+      position:absolute; top:14px; right:14px; z-index:2;
+      background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);
+      color:#fff; width:38px; height:38px; border-radius:50%;
+      font-size:1rem; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; backdrop-filter:blur(8px);
     }
-
-    #lightbox img {
-      max-width: 95vw;
-      max-height: 90vh;
-      object-fit: contain;
-      border-radius: 8px;
-      touch-action: none;
-      user-select: none;
-      transform-origin: center center;
-      transition: transform 0.05s;
-      cursor: grab;
-      max-height: unset;
+    #lb-img-wrap {
+      width:100vw; height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; touch-action:none;
     }
-
-    #lightbox-controls {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      display: flex;
-      gap: 8px;
-      z-index: 10;
-    }
-    .lb-btn {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #fff;
-      font-size: 1.1rem;
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(8px);
+    #lb-img {
+      max-width:100vw; max-height:100vh;
+      object-fit:contain; display:block;
+      touch-action:none; user-select:none;
+      -webkit-user-select:none; will-change:transform;
     }
 
     /* Fallback */
     .fallback-card {
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
+      border:1px dashed var(--border); border-radius:10px; padding:14px;
+      text-align:center; font-family:'Space Mono',monospace;
+      font-size:0.7rem; color:var(--muted);
     }
-    .fallback-card a {
-      color: var(--accent2);
-      word-break: break-all;
-    }
+    .fallback-card a { color:var(--accent2); word-break:break-all; }
 
-    /* Empty state */
     #empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.78rem;
-      border: 1px dashed var(--border);
-      border-radius: 16px;
+      text-align:center; padding:40px 20px; color:var(--muted);
+      font-family:'Space Mono',monospace; font-size:0.74rem;
+      border:1px dashed var(--border); border-radius:16px;
     }
-    #empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    #empty-state .icon { font-size:2.2rem; margin-bottom:10px; }
 
-    @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp  {from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)}}
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Pi Inline Media Tester</h1>
-    <p>Pi.nativeFeaturesList() → inline_media check</p>
-  </header>
+<header>
+  <h1>Pi Inline Media Tester</h1>
+  <p>Pi.nativeFeaturesList() → inline_media check</p>
+</header>
 
-  <div id="status-badge">
-    <span class="dot checking" id="dot"></span>
-    <span id="status-text">Checking inline_media support...</span>
-  </div>
+<div id="status-badge">
+  <span class="dot checking" id="dot"></span>
+  <span id="status-text">Checking inline_media support...</span>
+</div>
 
-  <div class="input-section">
-    <h2>📎 Media URL daalo</h2>
-    <div class="input-row">
-      <input type="text" id="url-input" placeholder="https://example.com/video.mp4 ya image.jpg"/>
-      <button onclick="addMedia()">Add</button>
-    </div>
+<!-- Single media -->
+<div class="input-section">
+  <h2>📎 Single — video / image / YouTube</h2>
+  <div class="input-row">
+    <input type="text" id="url-input" placeholder="https://... .mp4 / .jpg / youtu.be/..."/>
+    <button onclick="addMedia()">Add</button>
   </div>
+</div>
 
-  <div id="media-container">
-    <div id="empty-state">
-      <div class="icon">🎬</div>
-      Koi media nahi hai abhi.<br/>Upar URL daalo aur Add karo.
-    </div>
+<!-- Carousel builder -->
+<div class="input-section">
+  <h2>🖼️ Multi Image Carousel</h2>
+  <div id="multi-img-list" class="multi-img-list"></div>
+  <div class="input-row">
+    <input type="text" id="carousel-url-input" placeholder="https://... .jpg / .png / .webp"/>
+    <button onclick="addCarouselUrl()">＋</button>
   </div>
+  <div style="margin-top:10px;">
+    <button onclick="buildCarousel()" style="width:100%;">Create Carousel</button>
+  </div>
+</div>
+
+<div id="media-container">
+  <div id="empty-state">
+    <div class="icon">🎬</div>
+    Koi media nahi hai abhi.<br/>Upar se URL daalo aur Add karo.
+  </div>
+</div>
 
 <!-- Lightbox -->
 <div id="lightbox">
-  <div id="lightbox-controls">
-    <button class="lb-btn" onclick="lbZoom(1.3)" title="Zoom In">＋</button>
-    <button class="lb-btn" onclick="lbZoom(0.77)" title="Zoom Out">－</button>
-    <button class="lb-btn" onclick="closeLightbox()" title="Close">✕</button>
-  </div>
-  <div id="lightbox-img-wrap">
-    <img id="lightbox-img" src="" alt="fullscreen"/>
+  <button id="lb-close" onclick="closeLightbox()">✕</button>
+  <div id="lb-img-wrap">
+    <img id="lb-img" src="" alt=""/>
   </div>
 </div>
 
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
-  Pi.init({ version: "2.0", sandbox: false }); // sandbox: false karo production mein
+  Pi.init({ version: "2.0", sandbox: true });
 
-  let inlineMediaSupported = false;
+  let inlineSupported = false;
+  let carouselUrls = [];
 
+  // Pi init
   async function initPi() {
     const dot = document.getElementById("dot");
-    const statusText = document.getElementById("status-text");
-
+    const st  = document.getElementById("status-text");
     try {
       const features = await Pi.nativeFeaturesList();
-      inlineMediaSupported = features.includes("inline_media");
-
-      dot.className = "dot " + (inlineMediaSupported ? "supported" : "unsupported");
-      statusText.textContent = inlineMediaSupported
-        ? "✓ inline_media supported — Pi Browser render karega"
+      inlineSupported = features.includes("inline_media");
+      dot.className = "dot " + (inlineSupported ? "supported" : "unsupported");
+      st.textContent = inlineSupported
+        ? "✓ inline_media supported"
         : "✗ inline_media not supported — fallback mode";
-    } catch (e) {
+    } catch(e) {
       dot.className = "dot unsupported";
-      statusText.textContent = "Pi SDK unavailable — fallback mode";
+      st.textContent = "Pi SDK unavailable — fallback mode";
     }
   }
 
@@ -411,230 +285,305 @@
     const ext = url.split('?')[0].split('.').pop().toLowerCase();
     if (["mp4","webm","ogg","mov"].includes(ext)) return "video";
     if (["jpg","jpeg","png","gif","webp","svg","avif"].includes(ext)) return "image";
-    // YouTube check
     if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
     return "unknown";
   }
 
-  function getYouTubeId(url) {
-    const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return match ? match[1] : null;
+  function getYtId(url) {
+    const m = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
   }
 
+  function clearEmpty() {
+    const e = document.getElementById("empty-state");
+    if (e) e.remove();
+  }
+
+  // Single media add
   function addMedia() {
     const input = document.getElementById("url-input");
     const url = input.value.trim();
     if (!url) return;
-
-    // Remove empty state
-    const empty = document.getElementById("empty-state");
-    if (empty) empty.remove();
+    clearEmpty();
+    input.value = "";
 
     const type = detectType(url);
-    const container = document.getElementById("media-container");
-
+    const id   = Date.now();
     const card = document.createElement("div");
     card.className = "media-card";
-
-    const id = Date.now();
-
+    card.id = `card-${id}`;
     card.innerHTML = `
       <div class="media-card-header">
         <div class="media-label">
           <span class="type-tag">${type}</span>
-          <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
+          <span>${url}</span>
         </div>
         <button class="remove-btn" onclick="removeCard(${id})">✕</button>
       </div>
-      <div class="media-content" id="content-${id}"></div>
-    `;
-
-    container.appendChild(card);
-    card.id = `card-${id}`;
-
+      <div class="media-content" id="content-${id}"></div>`;
+    document.getElementById("media-container").appendChild(card);
     const content = document.getElementById(`content-${id}`);
 
-    if (inlineMediaSupported) {
-      // Inline render
-      if (type === "video") {
-        const wrap = document.createElement("div");
-        wrap.className = "video-wrap";
-
-        const video = document.createElement("video");
-        video.src = url;
-        video.controls = true;
-        video.playsInline = true;
-        video.setAttribute("webkit-playsinline", "true");
-        video.preload = "metadata";
-
-        const fsBtn = document.createElement("button");
-        fsBtn.className = "video-fs-btn";
-        fsBtn.textContent = "⛶ Full";
-        fsBtn.onclick = () => {
-          if (video.requestFullscreen) video.requestFullscreen();
-          else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
-          else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-        };
-
-        wrap.appendChild(video);
-        wrap.appendChild(fsBtn);
-        content.appendChild(wrap);
-
-      } else if (type === "image") {
-        const img = document.createElement("img");
-        img.src = url;
-        img.alt = "Inline Image";
-        img.loading = "lazy";
-        img.style.cursor = "zoom-in";
-        img.onclick = () => openLightbox(url);
-        content.appendChild(img);
-
-      } else if (type === "youtube") {
-        const ytId = getYouTubeId(url);
-        if (ytId) {
-          const wrap = document.createElement("div");
-          wrap.className = "yt-wrap";
-
-          const iframe = document.createElement("iframe");
-          // autoplay=1, mute=1 for autoplay policy, volume handled after
-          iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0`;
-          iframe.setAttribute("allowfullscreen", "true");
-          iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen");
-          iframe.setAttribute("frameborder", "0");
-
-          // Custom fullscreen button — opens iframe in native fullscreen
-          const fsBtn = document.createElement("button");
-          fsBtn.className = "yt-fs-btn";
-          fsBtn.textContent = "⛶ Full";
-          fsBtn.onclick = () => {
-            if (iframe.requestFullscreen) iframe.requestFullscreen();
-            else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-            else {
-              // Fallback: open in new tab full
-              window.open(`https://www.youtube.com/watch?v=${ytId}`, '_blank');
-            }
-          };
-
-          wrap.appendChild(iframe);
-          wrap.appendChild(fsBtn);
-          content.appendChild(wrap);
-        }
-
-      } else {
-        // Unknown type — try video first
-        content.innerHTML = `<p style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);padding:8px;">Unknown type — direct link: <a href="${url}" target="_blank" style="color:var(--accent2)">${url}</a></p>`;
-      }
-
-    } else {
-      // Fallback — no inline support
-      content.innerHTML = `
-        <div class="fallback-card">
-          inline_media support nahi hai.<br/>
-          <a href="${url}" target="_blank">${url}</a>
-        </div>`;
+    if (!inlineSupported) {
+      content.innerHTML = `<div class="fallback-card">inline_media not supported.<br/><a href="${url}" target="_blank">${url}</a></div>`;
+      return;
     }
 
-    input.value = "";
+    if (type === "video") {
+      const video = document.createElement("video");
+      video.src = url;
+      video.controls = true;
+      video.playsInline = true;
+      video.setAttribute("webkit-playsinline", "true");
+      video.preload = "metadata";
+      content.appendChild(video);
+
+    } else if (type === "image") {
+      const wrap = document.createElement("div");
+      wrap.className = "img-wrap";
+      const img = document.createElement("img");
+      img.src = url;
+      img.loading = "lazy";
+      img.onclick = () => openLightbox(url);
+      wrap.appendChild(img);
+      content.appendChild(wrap);
+
+    } else if (type === "youtube") {
+      const ytId = getYtId(url);
+      if (ytId) {
+        const wrap = document.createElement("div");
+        wrap.className = "yt-wrap";
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://www.youtube.com/embed/${ytId}?playsinline=1&rel=0`;
+        iframe.setAttribute("allowfullscreen","true");
+        iframe.setAttribute("allow","accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen");
+        iframe.setAttribute("frameborder","0");
+        wrap.appendChild(iframe);
+        content.appendChild(wrap);
+      }
+    } else {
+      content.innerHTML = `<div class="fallback-card">Unknown type.<br/><a href="${url}" target="_blank">${url}</a></div>`;
+    }
   }
 
-  // ─── Lightbox with pinch zoom + button zoom ───
-  let lbScale = 1;
-  let lbOriginX = 0, lbOriginY = 0;
-  let isDragging = false, dragStartX = 0, dragStartY = 0, translateX = 0, translateY = 0;
+  // Carousel URL management
+  function addCarouselUrl() {
+    const input = document.getElementById("carousel-url-input");
+    const url = input.value.trim();
+    if (!url) return;
+    carouselUrls.push(url);
+    input.value = "";
+    renderCarouselList();
+  }
+
+  function removeCarouselUrl(idx) {
+    carouselUrls.splice(idx, 1);
+    renderCarouselList();
+  }
+
+  function renderCarouselList() {
+    const list = document.getElementById("multi-img-list");
+    list.innerHTML = "";
+    carouselUrls.forEach((url, i) => {
+      const row = document.createElement("div");
+      row.className = "multi-img-row";
+      row.innerHTML = `<span>${i+1}. ${url}</span><button onclick="removeCarouselUrl(${i})">✕</button>`;
+      list.appendChild(row);
+    });
+  }
+
+  function buildCarousel() {
+    if (!carouselUrls.length) return;
+    clearEmpty();
+    const urls = [...carouselUrls];
+    carouselUrls = [];
+    renderCarouselList();
+
+    const id = Date.now();
+    const card = document.createElement("div");
+    card.className = "media-card";
+    card.id = `card-${id}`;
+    card.innerHTML = `
+      <div class="media-card-header">
+        <div class="media-label">
+          <span class="type-tag">carousel</span>
+          <span>${urls.length} images</span>
+        </div>
+        <button class="remove-btn" onclick="removeCard(${id})">✕</button>
+      </div>
+      <div class="media-content" id="content-${id}"></div>`;
+    document.getElementById("media-container").appendChild(card);
+    document.getElementById(`content-${id}`).appendChild(makeCarousel(urls));
+  }
+
+  function makeCarousel(urls) {
+    let current = 0;
+
+    const wrap = document.createElement("div");
+    wrap.className = "carousel-wrap";
+
+    const badge = document.createElement("div");
+    badge.className = "carousel-count";
+    badge.textContent = `1 / ${urls.length}`;
+    wrap.appendChild(badge);
+
+    const track = document.createElement("div");
+    track.className = "carousel-track";
+
+    urls.forEach((url, i) => {
+      const slide = document.createElement("div");
+      slide.className = "carousel-slide";
+      const img = document.createElement("img");
+      img.src = url;
+      img.loading = i === 0 ? "eager" : "lazy";
+      img.draggable = false;
+      slide.appendChild(img);
+      // tap opens lightbox — only if not a swipe
+      slide.addEventListener("click", () => {
+        if (!wasSwiped) openLightbox(url);
+      });
+      track.appendChild(slide);
+    });
+    wrap.appendChild(track);
+
+    const dotsWrap = document.createElement("div");
+    dotsWrap.className = "carousel-dots";
+    const dots = urls.map((_, i) => {
+      const d = document.createElement("div");
+      d.className = "c-dot" + (i === 0 ? " active" : "");
+      d.addEventListener("click", () => goTo(i));
+      dotsWrap.appendChild(d);
+      return d;
+    });
+    wrap.appendChild(dotsWrap);
+
+    function goTo(idx) {
+      current = Math.max(0, Math.min(idx, urls.length - 1));
+      track.style.transform = `translateX(-${current * 100}%)`;
+      dots.forEach((d,i) => d.classList.toggle("active", i === current));
+      badge.textContent = `${current + 1} / ${urls.length}`;
+    }
+
+    // Touch swipe
+    let startX = 0, diffX = 0, wasSwiped = false;
+
+    wrap.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+      diffX = 0; wasSwiped = false;
+      track.style.transition = "none";
+    }, { passive: true });
+
+    wrap.addEventListener("touchmove", e => {
+      diffX = e.touches[0].clientX - startX;
+      const diffY = e.touches[0].clientY - e.touches[0].clientY; // always 0, intent: just x
+      if (Math.abs(diffX) > 8) {
+        wasSwiped = true;
+        const base = current * wrap.offsetWidth;
+        track.style.transform = `translateX(${-base + diffX}px)`;
+      }
+    }, { passive: true });
+
+    wrap.addEventListener("touchend", () => {
+      track.style.transition = "";
+      if (diffX < -50 && current < urls.length - 1) goTo(current + 1);
+      else if (diffX > 50 && current > 0) goTo(current - 1);
+      else goTo(current);
+    }, { passive: true });
+
+    return wrap;
+  }
+
+  // Lightbox — real pinch zoom, double-tap reset
+  let lbScale = 1, lbTx = 0, lbTy = 0;
+  let lbLastDist = null, lbBaseScale = 1;
+  let lbDragging = false, lbDragX = 0, lbDragY = 0;
+  let lbLastTap = 0;
+
+  const lbWrap = document.getElementById("lb-img-wrap");
 
   function openLightbox(src) {
-    lbScale = 1; translateX = 0; translateY = 0;
-    const img = document.getElementById("lightbox-img");
+    lbScale = 1; lbTx = 0; lbTy = 0;
+    const img = document.getElementById("lb-img");
     img.src = src;
-    img.style.transform = `translate(0px,0px) scale(1)`;
+    img.style.transform = "";
     document.getElementById("lightbox").classList.add("active");
-    setupLightboxGestures();
+    document.body.style.overflow = "hidden";
   }
 
   function closeLightbox() {
     document.getElementById("lightbox").classList.remove("active");
-    document.getElementById("lightbox-img").src = "";
-    lbScale = 1; translateX = 0; translateY = 0;
+    setTimeout(() => { document.getElementById("lb-img").src = ""; }, 200);
+    document.body.style.overflow = "";
+    lbScale = 1; lbTx = 0; lbTy = 0;
   }
 
-  function lbZoom(factor) {
-    lbScale = Math.min(Math.max(lbScale * factor, 0.5), 6);
-    applyLbTransform();
+function applyLb() {
+    document.getElementById("lb-img").style.transform =
+      `translate(${lbTx}px,${lbTy}px) scale(${lbScale})`;
   }
 
-  function applyLbTransform() {
-    document.getElementById("lightbox-img").style.transform =
-      `translate(${translateX}px, ${translateY}px) scale(${lbScale})`;
-  }
-
-  function setupLightboxGestures() {
-    const img = document.getElementById("lightbox-img");
-
-    // ── Pinch Zoom (touch) ──
-    let lastDist = null;
-    let lastMidX = 0, lastMidY = 0;
-
-    img.addEventListener("touchstart", e => {
-      if (e.touches.length === 2) {
-        lastDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      } else if (e.touches.length === 1) {
-        isDragging = true;
-        dragStartX = e.touches[0].clientX - translateX;
-        dragStartY = e.touches[0].clientY - translateY;
+  lbWrap.addEventListener("touchstart", e => {
+    if (e.touches.length === 2) {
+      lbLastDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lbBaseScale = lbScale;
+      lbDragging = false;
+    } else {
+      lbDragging = true;
+      lbDragX = e.touches[0].clientX - lbTx;
+      lbDragY = e.touches[0].clientY - lbTy;
+      // double tap
+      const now = Date.now();
+      if (now - lbLastTap < 270) {
+        lbScale = 1; lbTx = 0; lbTy = 0; applyLb();
       }
-    }, { passive: true });
+      lbLastTap = now;
+    }
+  }, { passive: true });
 
-    img.addEventListener("touchmove", e => {
-      e.preventDefault();
-      if (e.touches.length === 2 && lastDist !== null) {
-        const dist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const delta = dist / lastDist;
-        lbScale = Math.min(Math.max(lbScale * delta, 0.5), 6);
-        lastDist = dist;
-        applyLbTransform();
-      } else if (e.touches.length === 1 && isDragging && lbScale > 1) {
-        translateX = e.touches[0].clientX - dragStartX;
-        translateY = e.touches[0].clientY - dragStartY;
-        applyLbTransform();
-      }
-    }, { passive: false });
+  lbWrap.addEventListener("touchmove", e => {
+    e.preventDefault();
+    if (e.touches.length === 2 && lbLastDist !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lbScale = Math.min(Math.max(lbBaseScale * (dist / lbLastDist), 0.8), 8);
+      applyLb();
+    } else if (e.touches.length === 1 && lbDragging) {
+      lbTx = e.touches[0].clientX - lbDragX;
+      lbTy = e.touches[0].clientY - lbDragY;
+      applyLb();
+    }
+  }, { passive: false });
 
-    img.addEventListener("touchend", e => {
-      if (e.touches.length < 2) lastDist = null;
-      if (e.touches.length === 0) isDragging = false;
-    }, { passive: true });
-  }
+  lbWrap.addEventListener("touchend", e => {
+    if (e.touches.length < 2) lbLastDist = null;
+    if (e.touches.length === 0) {
+      lbDragging = false;
+      if (lbScale < 1) { lbScale = 1; lbTx = 0; lbTy = 0; applyLb(); }
+    }
+  }, { passive: true });
 
-  // Close on bg tap
-  document.getElementById("lightbox").addEventListener("click", function(e) {
-    if (e.target === this || e.target === document.getElementById("lightbox-img-wrap")) closeLightbox();
+  // Tap background to close
+  document.getElementById("lightbox").addEventListener("click", e => {
+    if (e.target === document.getElementById("lightbox") || e.target === lbWrap) closeLightbox();
   });
 
   function removeCard(id) {
     const card = document.getElementById(`card-${id}`);
     if (card) card.remove();
-
-    if (document.getElementById("media-container").children.length === 0) {
+    if (!document.getElementById("media-container").children.length) {
       document.getElementById("media-container").innerHTML = `
-        <div id="empty-state">
-          <div class="icon">🎬</div>
-          Koi media nahi hai abhi.<br/>Upar URL daalo aur Add karo.
-        </div>`;
+        <div id="empty-state"><div class="icon">🎬</div>
+        Koi media nahi hai abhi.<br/>Upar se URL daalo aur Add karo.</div>`;
     }
   }
 
-  // Enter key support
-  document.getElementById("url-input").addEventListener("keydown", e => {
-    if (e.key === "Enter") addMedia();
-  });
+  document.getElementById("url-input").addEventListener("keydown", e => { if(e.key==="Enter") addMedia(); });
+  document.getElementById("carousel-url-input").addEventListener("keydown", e => { if(e.key==="Enter") addCarouselUrl(); });
 
   initPi();
 </script>
