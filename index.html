@@ -330,37 +330,36 @@
       return;
     }
 
+
+    
     if (type === "video") {
   const video = document.createElement("video");
   video.src = url;
   video.playsInline = true;
   video.preload = "metadata";
   video.controls = false;
+  video.muted = true;
 
   video.style.cursor = "pointer";
 
-  // custom controls only
   video.addEventListener("click", () => {
     openVideoFullscreen(video);
   });
 
-  // autoplay muted preview optional
-  video.muted = true;
-
   content.appendChild(video);
-}
 
-    } else if (type === "image") {
-      const wrap = document.createElement("div");
-      wrap.className = "img-wrap";
-      const img = document.createElement("img");
-      img.src = url;
-      img.loading = "lazy";
-      img.onclick = () => openLightbox(url);
-      wrap.appendChild(img);
-      content.appendChild(wrap);
+} else if (type === "image") {
 
-    } else if (type === "youtube") {
+  const wrap = document.createElement("div");
+  wrap.className = "img-wrap";
+  const img = document.createElement("img");
+  img.src = url;
+  img.loading = "lazy";
+  img.onclick = () => openLightbox(url);
+  wrap.appendChild(img);
+  content.appendChild(wrap);
+
+} else if (type === "youtube") {
       const ytId = getYtId(url);
       if (ytId) {
         const wrap = document.createElement("div");
