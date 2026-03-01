@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>Video Player</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #080810;
+  --surface: #0f0f1a;
+  --card: #141420;
+  --border: #1e1e30;
+  --accent: #7c5cfc;
+  --accent2: #b44cfc;
+  --glow: rgba(124,92,252,0.35);
+  --text: #f0f0ff;
+  --muted: #5a5a7a;
+  --bar-h: 3px;
+  --ctrl-h: 52px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Outfit',sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px 14px 40px;
+  overflow-x:hidden;
+}
+
+/* ── Header ── */
+.header{
+  width:100%; max-width:680px;
+  text-align:center;
+  margin-bottom:22px;
+  animation:fadeDown .6s ease both;
+}
+.header h1{
+  font-size:clamp(1.3rem,4vw,1.9rem);
+  font-weight:700;
+  background:linear-gradient(120deg,#a78bfa,#7c5cfc,#b44cfc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-.3px;
+}
+.header p{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;color:var(--muted);margin-top:4px;
+}
+
+/* ── URL Input ── */
+.url-bar{
+  width:100%;max-width:680px;
+  display:flex;gap:8px;
+  margin-bottom:18px;
+  animation:fadeUp .5s .1s ease both;
+}
+.url-bar input{
+  flex:1;background:var(--card);
+  border:1px solid var(--border);border-radius:12px;
+  padding:11px 14px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.74rem;
+  outline:none;transition:border-color .2s;
+}
+.url-bar input:focus{border-color:var(--accent);}
+.url-bar input::placeholder{color:var(--muted);}
+.url-bar button{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:12px;
+  padding:11px 18px;font-family:'Outfit',sans-serif;
+  font-weight:600;font-size:.82rem;cursor:pointer;
+  white-space:nowrap;transition:opacity .2s,transform .1s;
+}
+.url-bar button:active{opacity:.85;transform:scale(.97);}
+
+/* ── Player wrapper — fixed height container ── */
+.player-wrap{
+  width:100%;max-width:680px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;
+  box-shadow:0 0 60px rgba(124,92,252,.1);
+  animation:fadeUp .5s .2s ease both;
+  position:relative;
+}
+
+/* ── Video area wrapper — this sets the height ── */
+.vid-area{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+  overflow:hidden;
+}
+
+/* ── Video fills vid-area ── */
+#vid{
+  width:100%;height:100%;display:block;
+  background:#000;
+  object-fit:contain;
+  cursor:pointer;
+}
+
+/* ── Gesture overlays (double tap zones) ── */
+.tap-zone{
+  position:absolute;top:0;width:40%;height:100%;
+  z-index:5;pointer-events:auto;
+}
+#tap-left{left:0;}
+#tap-right{right:0;}
+
+/* ── Ripple on double tap ── */
+.ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.18);
+  width:80px;height:80px;
+  margin:-40px;
+  pointer-events:none;
+  animation:ripple .5s ease forwards;
+}
+@keyframes ripple{0%{transform:scale(0);opacity:1}100%{transform:scale(2.5);opacity:0}}
+
+/* ── Skip label ── */
+.skip-label{
+  position:absolute;top:50%;transform:translateY(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:.8rem;
+  font-weight:700;color:#fff;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+  padding:6px 12px;border-radius:20px;
+  pointer-events:none;opacity:0;
+  transition:opacity .2s;z-index:7;
+}
+#skip-label-left{left:16px;}
+#skip-label-right{right:16px;}
+.skip-label.show{opacity:1;}
+
+/* ── Buffering spinner — centered in vid-area ── */
+#spinner{
+  position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:44px;height:44px;
+  border:3px solid rgba(255,255,255,.12);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  display:none;z-index:9;pointer-events:none;
+}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* ── Long press speed indicator ── */
+#speed-flash{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'JetBrains Mono',monospace;
+  font-size:1rem;font-weight:700;
+  color:#fff;background:rgba(124,92,252,.75);
+  backdrop-filter:blur(8px);
+  padding:8px 18px;border-radius:30px;
+  pointer-events:none;opacity:0;transition:opacity .2s;z-index:10;
+}
+#speed-flash.show{opacity:1;}
+
+/* ── Controls — OVERLAY on video bottom ── */
+.controls{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  padding:10px 14px 10px;
+  background:linear-gradient(to top, rgba(5,5,14,.97) 0%, rgba(5,5,14,.6) 60%, transparent 100%);
+  z-index:8;
+  transition:opacity .35s;
+}
+.controls.hidden{opacity:0;pointer-events:none;}
+
+/* ── Center play/pause — z-index 15, above progress bar ── */
+#center-play{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-65%);
+  z-index:15;
+  background:rgba(0,0,0,.45);
+  border:none;border-radius:50%;
+  width:58px;height:58px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;backdrop-filter:blur(6px);
+  transition:opacity .35s, transform .15s;
+  pointer-events:auto;
+}
+#center-play svg{width:30px;height:30px;fill:#fff;}
+#center-play.hidden{opacity:0;pointer-events:none;}
+#center-play:active{transform:translate(-50%,-65%) scale(.88);}
+
+/* ── Time row — ABOVE progress bar ── */
+.time-row{
+  display:flex;justify-content:space-between;
+  padding:0 2px 4px;
+}
+.time-display{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:rgba(255,255,255,.55);
+  white-space:nowrap;
+}
+.time-display span{color:rgba(255,255,255,.9);}
+
+/* ── Progress bar ── */
+.progress-wrap{
+  position:relative;height:20px;
+  display:flex;align-items:center;
+  cursor:pointer;margin-bottom:4px;
+  z-index:9;
+}
+.progress-bg{
+  width:100%;height:3px;
+  background:rgba(255,255,255,.15);border-radius:99px;
+  position:relative;overflow:hidden;
+}
+.progress-buf{
+  position:absolute;top:0;left:0;height:100%;
+  background:rgba(255,255,255,.2);border-radius:99px;
+}
+.progress-fill{
+  position:absolute;top:0;left:0;height:100%;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:99px;transition:width .1s linear;
+}
+.progress-thumb{
+  position:absolute;top:50%;
+  width:13px;height:13px;
+  background:#fff;border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 8px var(--glow);
+  transition:left .1s linear;
+  pointer-events:none;
+}
+
+/* ── Bottom ctrl row: vol · speed · native · fs ── */
+.ctrl-row{
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:2px;
+}
+.ctrl-btn{
+  background:none;border:none;color:var(--text);
+  cursor:pointer;padding:7px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;flex-shrink:0;
+}
+.ctrl-btn:active{background:rgba(255,255,255,.08);transform:scale(.92);}
+.ctrl-btn svg{width:22px;height:22px;fill:currentColor;}
+
+/* Volume */
+.vol-wrap{display:flex;align-items:center;gap:4px;margin-right:auto;}
+.vol-slider{
+  -webkit-appearance:none;appearance:none;
+  width:60px;height:3px;border-radius:99px;
+  background:rgba(255,255,255,.15);outline:none;cursor:pointer;
+}
+.vol-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;
+  border-radius:50%;background:#fff;box-shadow:0 0 6px var(--glow);
+}
+@media(max-width:360px){.vol-slider{display:none;}}
+
+/* Speed menu */
+.speed-wrap{position:relative;}
+.speed-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;font-weight:600;
+  color:var(--text);background:rgba(255,255,255,.06);
+  border:1px solid var(--border);border-radius:8px;
+  padding:4px 8px;cursor:pointer;
+  transition:background .15s;
+}
+.speed-btn:active{background:rgba(255,255,255,.12);}
+.speed-menu{
+  position:absolute;bottom:calc(100% + 8px);right:0;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  display:none;z-index:20;min-width:80px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.speed-menu.open{display:block;}
+.speed-opt{
+  display:block;width:100%;padding:9px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  color:var(--muted);background:none;border:none;
+  cursor:pointer;text-align:left;transition:background .12s,color .12s;
+}
+.speed-opt:hover,.speed-opt.active{background:rgba(124,92,252,.15);color:var(--accent);}
+
+/* ── FULLSCREEN OVERLAY ── */
+/* Same video element moved into this overlay via JS */
+#fs-overlay{
+  display:none;position:fixed;inset:0;
+  background:#000;z-index:9999;
+  flex-direction:column;
+  overflow:hidden;
+}
+#fs-overlay.active{display:flex;}
+
+#fs-top{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.75) 0%,transparent 100%);
+  z-index:20;transition:opacity .35s;
+}
+#fs-overlay.ctrl-hidden #fs-bottom{opacity:0;pointer-events:none;}
+/* fs-title hides but close btn always works — handled via pointer-events:auto on #fs-close */
+/* Close button ALWAYS on top and clickable */
+#fs-close{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;backdrop-filter:blur(10px);font-size:1.1rem;
+  transition:background .15s;
+  position:relative;z-index:30;
+  pointer-events:auto !important;
+}
+#fs-close:active{background:rgba(255,255,255,.3);}
+
+/* Video inside fullscreen fills screen */
+#fs-video-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+
+/* Tap zones only top 70% — bottom 30% free for controls */
+.fs-tap{
+  position:absolute;top:0;width:38%;height:70%;z-index:5;
+}
+#fs-tap-left{left:0;}
+#fs-tap-right{right:0;}
+
+#fs-spinner{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:44px;height:44px;
+  border:3px solid rgba(255,255,255,.1);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  display:none;z-index:6;pointer-events:none;
+}
+#fs-speed-flash{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.1rem;font-weight:700;
+  color:#fff;background:rgba(124,92,252,.7);
+  backdrop-filter:blur(8px);
+  padding:8px 20px;border-radius:30px;
+  pointer-events:none;opacity:0;transition:opacity .2s;z-index:8;
+}
+#fs-speed-flash.show{opacity:1;}
+/* ── FS center play button ── */
+#fs-center-play{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-65%);
+  z-index:15;
+  background:rgba(0,0,0,.4);
+  border:none;border-radius:50%;
+  width:62px;height:62px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;backdrop-filter:blur(8px);
+  transition:opacity .35s,transform .15s;pointer-events:auto;
+}
+#fs-center-play svg{width:32px;height:32px;fill:#fff;}
+#fs-center-play.hidden{opacity:0;pointer-events:none;}
+#fs-center-play:active{transform:translate(-50%,-65%) scale(.86);}
+
+/* fs-bottom z-index 10 — ABOVE tap zones (5) */
+#fs-bottom{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:14px 16px 24px;
+  background:linear-gradient(to top,rgba(0,0,0,.92) 0%,transparent 100%);
+  z-index:10;transition:opacity .35s;
+}
+/* FS progress */
+.fs-progress-wrap{
+  position:relative;height:20px;
+  display:flex;align-items:center;
+  cursor:pointer;margin-bottom:0;
+}
+.fs-progress-bg{
+  width:100%;height:4px;
+  background:rgba(255,255,255,.15);border-radius:99px;position:relative;overflow:hidden;
+}
+.fs-progress-buf{
+  position:absolute;top:0;left:0;height:100%;
+  background:rgba(255,255,255,.2);border-radius:99px;
+}
+.fs-progress-fill{
+  position:absolute;top:0;left:0;height:100%;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;
+}
+.fs-progress-thumb{
+  position:absolute;top:50%;width:15px;height:15px;
+  background:#fff;border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 10px var(--glow);pointer-events:none;
+}
+/* FS time row */
+.fs-time-row{
+  display:flex;justify-content:space-between;
+  padding:3px 2px 6px;
+}
+.fs-time{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;color:rgba(255,255,255,.55);
+  white-space:nowrap;
+}
+.fs-time span{color:#fff;}
+/* FS ctrl row: vol · speed · fs-close-btn */
+.fs-ctrl-row{
+  display:flex;align-items:center;gap:4px;
+}
+.fs-btn{
+  background:none;border:none;color:#fff;
+  cursor:pointer;padding:7px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;flex-shrink:0;
+}
+.fs-btn:active{background:rgba(255,255,255,.1);transform:scale(.9);}
+.fs-btn svg{width:22px;height:22px;fill:currentColor;}
+.fs-spacer{flex:1;}
+.fs-vol-wrap{display:flex;align-items:center;gap:5px;margin-right:auto;}
+.fs-vol-slider{
+  -webkit-appearance:none;appearance:none;
+  width:72px;height:3px;border-radius:99px;
+  background:rgba(255,255,255,.2);outline:none;cursor:pointer;
+}
+.fs-vol-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;
+  border-radius:50%;background:#fff;box-shadow:0 0 6px var(--glow);
+}
+.fs-speed-wrap{position:relative;}
+.fs-speed-btn{
+  font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;
+  color:#fff;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);border-radius:8px;
+  padding:4px 10px;cursor:pointer;transition:background .15s;
+}
+.fs-speed-menu{
+  position:absolute;bottom:calc(100% + 8px);right:0;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;display:none;
+  z-index:20;min-width:86px;box-shadow:0 8px 32px rgba(0,0,0,.7);
+}
+.fs-speed-menu.open{display:block;}
+.fs-speed-opt{
+  display:block;width:100%;padding:9px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  color:var(--muted);background:none;border:none;
+  cursor:pointer;text-align:left;transition:background .12s,color .12s;
+}
+}
+.fs-speed-opt:hover,.fs-speed-opt.active{background:rgba(124,92,252,.15);color:var(--accent);}
+
+/* ── Empty/placeholder ── */
+#placeholder{
+  width:100%;aspect-ratio:16/9;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:10px;background:#000;
+  color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:.75rem;
+}
+#placeholder svg{width:48px;height:48px;opacity:.3;fill:var(--accent);}
+
+/* ── Resume banner ── */
+#resume-bar{
+  display:none;
+  background:rgba(124,92,252,.12);
+  border-top:1px solid rgba(124,92,252,.2);
+  padding:10px 14px;
+  flex-direction:row;align-items:center;gap:10px;
+  font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);
+}
+#resume-bar.show{display:flex;}
+#resume-bar button{
+  margin-left:auto;padding:5px 12px;
+  border-radius:8px;font-size:.68rem;
+  background:var(--accent);color:#fff;border:none;cursor:pointer;
+}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp  {from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Video Player</h1>
+  <p>Native engine · Custom UI · Single element · Zero sync</p>
+</div>
+
+<div class="url-bar">
+  <input type="text" id="url-input" placeholder="https://example.com/video.mp4 or .webm"/>
+  <button onclick="loadVideo()">Load</button>
+</div>
+
+<div class="player-wrap" id="player-wrap">
+
+  <!-- vid-area: everything overlaid on video -->
+  <div class="vid-area" id="vid-area">
+
+    <!-- Placeholder -->
+    <div id="placeholder">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <span>Video URL daalo aur Load karo</span>
+    </div>
+
+    <!-- Actual video -->
+    <video id="vid" playsinline webkit-playsinline preload="metadata" style="display:none;"></video>
+
+    <!-- Gesture tap zones -->
+    <div class="tap-zone" id="tap-left"></div>
+    <div class="tap-zone" id="tap-right"></div>
+
+    <!-- Skip labels -->
+    <div class="skip-label" id="skip-label-left">−10s</div>
+    <div class="skip-label" id="skip-label-right">+10s</div>
+
+    <!-- Spinner -->
+    <div id="spinner"></div>
+    <!-- Speed flash -->
+    <div id="speed-flash">2× Speed</div>
+
+    <!-- Center play/pause button -->
+    <button id="center-play" onclick="togglePlay()">
+      <svg id="ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="ico-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+
+    <!-- Controls — overlaid at bottom of vid-area -->
+    <div class="controls" id="controls">
+      <!-- Time ABOVE bar -->
+      <div class="time-row">
+        <div class="time-display"><span id="time-cur">0:00</span></div>
+        <div class="time-display"><span id="time-dur">0:00</span></div>
+      </div>
+      <!-- Progress bar -->
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bg">
+          <div class="progress-buf" id="progress-buf"></div>
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-thumb" id="progress-thumb"></div>
+      </div>
+      <!-- Bottom row: vol · speed · native · fs -->
+      <div class="ctrl-row">
+        <div class="vol-wrap">
+          <button class="ctrl-btn" id="btn-mute" onclick="toggleMute()">
+            <svg id="ico-vol" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            <svg id="ico-mute" viewBox="0 0 24 24" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+          </button>
+          <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.02" value="1"/>
+        </div>
+        <div class="speed-wrap">
+          <button class="speed-btn" id="speed-btn" onclick="toggleSpeedMenu()">1×</button>
+          <div class="speed-menu" id="speed-menu">
+            <button class="speed-opt" onclick="setSpeed(0.5)">0.5×</button>
+            <button class="speed-opt" onclick="setSpeed(0.75)">0.75×</button>
+            <button class="speed-opt active" onclick="setSpeed(1)">1×</button>
+            <button class="speed-opt" onclick="setSpeed(1.25)">1.25×</button>
+            <button class="speed-opt" onclick="setSpeed(1.5)">1.5×</button>
+            <button class="speed-opt" onclick="setSpeed(2)">2×</button>
+          </div>
+        </div>
+        <button class="ctrl-btn" id="btn-native" onclick="toggleNative()" title="Switch to native player">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm-2 5h20v2H2zm4 5h12v2H6z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="openFS()" title="Fullscreen">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end vid-area -->
+
+  <!-- Resume bar — outside vid-area, below video -->
+  <div id="resume-bar">
+    <span id="resume-text">Resume from <b id="resume-time">0:00</b>?</span>
+    <button onclick="resumeVideo()">Resume</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     FULLSCREEN OVERLAY — same <video> element
+     moved here via JS, zero double-load
+═══════════════════════════════════════════ -->
+<div id="fs-overlay">
+  <div id="fs-top">
+    <div id="fs-title">Video</div>
+    <button id="fs-close" onclick="closeFS()">✕</button>
+  </div>
+
+  <div id="fs-video-wrap">
+    <!-- video element will be moved here -->
+    <!-- Tap zones only cover TOP 70% — bottom 30% reserved for controls -->
+    <div class="fs-tap" id="fs-tap-left"></div>
+    <div id="fs-tap-center" style="position:absolute;top:0;left:38%;width:24%;height:70%;z-index:5;"></div>
+    <div class="fs-tap" id="fs-tap-right"></div>
+    <div class="skip-label fs-skip-label" id="fs-skip-left-lbl">−10s</div>
+    <div class="skip-label fs-skip-label" id="fs-skip-right-lbl">+10s</div>
+    <div id="fs-spinner"></div>
+    <div id="fs-speed-flash">2× Speed</div>
+    <!-- FS center play button -->
+    <button id="fs-center-play" onclick="togglePlay()">
+      <svg id="fs-ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="fs-ico-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+  </div>
+
+  <div id="fs-bottom">
+    <!-- Time ABOVE bar -->
+    <div class="fs-time-row">
+      <div class="fs-time"><span id="fs-time-cur">0:00</span></div>
+      <div class="fs-time"><span id="fs-time-dur">0:00</span></div>
+    </div>
+    <div class="fs-progress-wrap" id="fs-progress-wrap">
+      <div class="fs-progress-bg">
+        <div class="fs-progress-buf" id="fs-progress-buf"></div>
+        <div class="fs-progress-fill" id="fs-progress-fill"></div>
+      </div>
+      <div class="fs-progress-thumb" id="fs-progress-thumb"></div>
+    </div>
+    <!-- Controls row: vol · speed -->
+    <div class="fs-ctrl-row">
+      <div class="fs-vol-wrap">
+        <button class="fs-btn" onclick="toggleMute()">
+          <svg id="fs-ico-vol" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          <svg id="fs-ico-mute" viewBox="0 0 24 24" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+        </button>
+        <input type="range" class="fs-vol-slider" id="fs-vol-slider" min="0" max="1" step="0.02" value="1"/>
+      </div>
+      <div class="fs-speed-wrap">
+        <button class="fs-speed-btn" id="fs-speed-btn" onclick="toggleFsSpeedMenu()">1×</button>
+        <div class="fs-speed-menu" id="fs-speed-menu">
+          <button class="fs-speed-opt" onclick="setSpeed(0.5)">0.5×</button>
+          <button class="fs-speed-opt" onclick="setSpeed(0.75)">0.75×</button>
+          <button class="fs-speed-opt active" onclick="setSpeed(1)">1×</button>
+          <button class="fs-speed-opt" onclick="setSpeed(1.25)">1.25×</button>
+          <button class="fs-speed-opt" onclick="setSpeed(1.5)">1.5×</button>
+          <button class="fs-speed-opt" onclick="setSpeed(2)">2×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const vid       = document.getElementById('vid');
+const SPEEDS    = [0.5, 0.75, 1, 1.25, 1.5, 2];
+let   isFS      = false;
+let   ctrlTimer = null;
+let   videoUrl  = '';
+let   savedPositions = {};  // url -> time
+
+// ── Load video ──
+function loadVideo() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  videoUrl = url;
+
+  document.getElementById('placeholder').style.display = 'none';
+  vid.style.display = 'block';
+  vid.src = url;
+  vid.load();
+
+  // Resume?
+  const saved = savedPositions[url];
+  if (saved && saved > 2) {
+    document.getElementById('resume-time').textContent = fmtTime(saved);
+    document.getElementById('resume-bar').classList.add('show');
+  } else {
+    document.getElementById('resume-bar').classList.remove('show');
+    vid.play().catch(()=>{});
+  }
+
+  // Update FS title
+  const name = url.split('/').pop().split('?')[0] || 'Video';
+  document.getElementById('fs-title').textContent = name;
+}
+
+function resumeVideo() {
+  vid.currentTime = savedPositions[videoUrl] || 0;
+  document.getElementById('resume-bar').classList.remove('show');
+  vid.play().catch(()=>{});
+}
+
+// ── Play / Pause ──
+function togglePlay() {
+  if (vid.paused) vid.play(); else vid.pause();
+  showControls();
+}
+
+vid.addEventListener('play',  () => setPlayUI(true));
+vid.addEventListener('pause', () => setPlayUI(false));
+vid.addEventListener('ended', () => setPlayUI(false));
+
+function setPlayUI(playing) {
+  // Center play buttons (show/hide based on playing state — hide when playing after delay)
+  const cp   = document.getElementById('center-play');
+  const fscp = document.getElementById('fs-center-play');
+  const playIco  = document.getElementById('ico-play');
+  const pauseIco = document.getElementById('ico-pause');
+  const fsPlayIco  = document.getElementById('fs-ico-play');
+  const fsPauseIco = document.getElementById('fs-ico-pause');
+  if (playIco)  playIco.style.display  = playing ? 'none' : '';
+  if (pauseIco) pauseIco.style.display = playing ? '' : 'none';
+  if (fsPlayIco)  fsPlayIco.style.display  = playing ? 'none' : '';
+  if (fsPauseIco) fsPauseIco.style.display = playing ? '' : 'none';
+}
+
+// ── Time update ──
+vid.addEventListener('timeupdate', () => {
+  const pct = vid.duration ? vid.currentTime / vid.duration * 100 : 0;
+  // Normal
+  document.getElementById('progress-fill').style.width  = pct + '%';
+  document.getElementById('progress-thumb').style.left  = pct + '%';
+  document.getElementById('time-cur').textContent = fmtTime(vid.currentTime);
+  document.getElementById('time-dur').textContent = fmtTime(vid.duration || 0);
+  // FS
+  document.getElementById('fs-progress-fill').style.width = pct + '%';
+  document.getElementById('fs-progress-thumb').style.left  = pct + '%';
+  document.getElementById('fs-time-cur').textContent = fmtTime(vid.currentTime);
+  document.getElementById('fs-time-dur').textContent = fmtTime(vid.duration || 0);
+  // Save position
+  if (videoUrl && vid.currentTime > 2) savedPositions[videoUrl] = vid.currentTime;
+});
+
+// ── Buffer progress ──
+vid.addEventListener('progress', updateBuf);
+vid.addEventListener('timeupdate', updateBuf);
+function updateBuf() {
+  if (!vid.duration || !vid.buffered.length) return;
+  const pct = vid.buffered.end(vid.buffered.length - 1) / vid.duration * 100;
+  document.getElementById('progress-buf').style.width    = pct + '%';
+  document.getElementById('fs-progress-buf').style.width = pct + '%';
+}
+
+// ── Spinner ──
+vid.addEventListener('waiting', () => {
+  document.getElementById('spinner').style.display    = 'block';
+  document.getElementById('fs-spinner').style.display = 'block';
+});
+vid.addEventListener('canplay', () => {
+  document.getElementById('spinner').style.display    = 'none';
+  document.getElementById('fs-spinner').style.display = 'none';
+});
+vid.addEventListener('playing', () => {
+  document.getElementById('spinner').style.display    = 'none';
+  document.getElementById('fs-spinner').style.display = 'none';
+});
+
+// ── Seek ──
+function seekBy(sec) {
+  vid.currentTime = Math.max(0, Math.min(vid.duration || 0, vid.currentTime + sec));
+  showControls();
+}
+
+function seekTo(pct, el) {
+  vid.currentTime = pct * (vid.duration || 0);
+}
+
+// Progress bar drag — normal
+setupSeek(
+  document.getElementById('progress-wrap'),
+  document.getElementById('progress-fill'),
+  document.getElementById('progress-thumb')
+);
+// Progress bar drag — FS
+setupSeek(
+  document.getElementById('fs-progress-wrap'),
+  document.getElementById('fs-progress-fill'),
+  document.getElementById('fs-progress-thumb')
+);
+
+function setupSeek(wrap, fill, thumb) {
+  let seeking = false;
+
+  function calc(e) {
+    const rect = wrap.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    return Math.max(0, Math.min(1, x / rect.width));
+  }
+
+  function start(e) {
+    e.preventDefault();
+    seeking = true;
+    const pct = calc(e);
+    fill.style.width   = pct * 100 + '%';
+    thumb.style.left   = pct * 100 + '%';
+    vid.currentTime    = pct * (vid.duration || 0);
+    showControls();
+  }
+
+  function move(e) {
+    if (!seeking) return;
+    e.preventDefault();
+    const pct = calc(e);
+    fill.style.width  = pct * 100 + '%';
+    thumb.style.left  = pct * 100 + '%';
+    vid.currentTime   = pct * (vid.duration || 0);
+  }
+
+  function end() { seeking = false; }
+
+  wrap.addEventListener('mousedown', start);
+  wrap.addEventListener('touchstart', start, { passive: false });
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, { passive: false });
+  document.addEventListener('mouseup', end);
+  document.addEventListener('touchend', end);
+}
+
+// ── Volume ──
+document.getElementById('vol-slider').addEventListener('input', function() {
+  vid.volume = this.value;
+  vid.muted  = this.value == 0;
+  document.getElementById('fs-vol-slider').value = this.value;
+  updateVolUI();
+});
+document.getElementById('fs-vol-slider').addEventListener('input', function() {
+  vid.volume = this.value;
+  vid.muted  = this.value == 0;
+  document.getElementById('vol-slider').value = this.value;
+  updateVolUI();
+});
+
+function toggleMute() {
+  vid.muted = !vid.muted;
+  document.getElementById('vol-slider').value    = vid.muted ? 0 : vid.volume;
+  document.getElementById('fs-vol-slider').value = vid.muted ? 0 : vid.volume;
+  updateVolUI();
+  showControls();
+}
+
+function updateVolUI() {
+  const muted = vid.muted || vid.volume === 0;
+  document.getElementById('ico-vol').style.display    = muted ? 'none' : '';
+  document.getElementById('ico-mute').style.display   = muted ? '' : 'none';
+  document.getElementById('fs-ico-vol').style.display = muted ? 'none' : '';
+  document.getElementById('fs-ico-mute').style.display= muted ? '' : 'none';
+}
+
+// ── Speed ──
+function setSpeed(s) {
+  vid.playbackRate = s;
+  const label = s + '×';
+  document.getElementById('speed-btn').textContent    = label;
+  document.getElementById('fs-speed-btn').textContent = label;
+
+  document.querySelectorAll('.speed-opt').forEach(el =>
+    el.classList.toggle('active', parseFloat(el.textContent) === s)
+  );
+  document.querySelectorAll('.fs-speed-opt').forEach(el =>
+    el.classList.toggle('active', parseFloat(el.textContent) === s)
+  );
+
+  document.getElementById('speed-menu').classList.remove('open');
+  document.getElementById('fs-speed-menu').classList.remove('open');
+  showControls();
+}
+
+function toggleSpeedMenu() {
+  document.getElementById('speed-menu').classList.toggle('open');
+}
+function toggleFsSpeedMenu() {
+  document.getElementById('fs-speed-menu').classList.toggle('open');
+}
+
+// Close menus on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.speed-wrap'))    document.getElementById('speed-menu').classList.remove('open');
+  if (!e.target.closest('.fs-speed-wrap')) document.getElementById('fs-speed-menu').classList.remove('open');
+});
+
+// ── Auto-hide controls ──
+function showControls() {
+  const ctrl   = document.getElementById('controls');
+  const cp     = document.getElementById('center-play');
+  const fsOver = document.getElementById('fs-overlay');
+  const fscp   = document.getElementById('fs-center-play');
+
+  ctrl.classList.remove('hidden');
+  cp.classList.remove('hidden');
+  fsOver.classList.remove('ctrl-hidden');
+  if (fscp) fscp.classList.remove('hidden');
+
+  clearTimeout(ctrlTimer);
+  if (!vid.paused) {
+    ctrlTimer = setTimeout(() => {
+      ctrl.classList.add('hidden');
+      cp.classList.add('hidden');
+      fsOver.classList.add('ctrl-hidden');
+      if (fscp) fscp.classList.add('hidden');
+    }, 2500);
+  }
+}
+
+// Video tap — show controls or toggle play
+vid.addEventListener('click', () => {
+  const ctrl = document.getElementById('controls');
+  if (ctrl.classList.contains('hidden')) { showControls(); }
+  else { togglePlay(); showControls(); }
+});
+
+// FS center zone tap → play/pause
+document.getElementById('fs-tap-center').addEventListener('click', () => {
+  togglePlay();
+  showControls();
+});
+
+document.getElementById('fs-video-wrap').addEventListener('click', e => {
+  // Ignore clicks on controls/buttons/tap zones
+  if (e.target.closest('.fs-btn') || e.target.closest('.fs-speed-wrap') ||
+      e.target.closest('.fs-progress-wrap') || e.target.closest('#fs-close') ||
+      e.target.closest('#fs-center-play') || e.target.id === 'fs-tap-center') return;
+  const fsOver = document.getElementById('fs-overlay');
+  if (fsOver.classList.contains('ctrl-hidden')) showControls();
+  else showControls();
+});
+
+// ── FULLSCREEN (CSS overlay, same <video>) ──
+const fsOverlay   = document.getElementById('fs-overlay');
+const fsVideoWrap = document.getElementById('fs-video-wrap');
+const vidArea     = document.getElementById('vid-area');
+
+function openFS() {
+  isFS = true;
+  fsVideoWrap.insertBefore(vid, fsVideoWrap.firstChild);
+  vid.style.cssText = 'position:relative;width:100%;height:100%;max-height:100vh;object-fit:contain;display:block;cursor:pointer;';
+  fsOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  showControls();
+}
+
+function closeFS() {
+  isFS = false;
+  // Move video back to vid-area (before tap zones)
+  vidArea.insertBefore(vid, vidArea.querySelector('#tap-left'));
+  vid.style.cssText = 'width:100%;height:100%;display:block;background:#000;object-fit:contain;cursor:pointer;';
+  fsOverlay.classList.remove('active', 'ctrl-hidden');
+  document.body.style.overflow = '';
+  clearTimeout(ctrlTimer);
+  document.getElementById('controls').classList.remove('hidden');
+}
+
+// ── Swipe down to close FS ──
+let fsSwipeStartY = 0;
+fsOverlay.addEventListener('touchstart', e => {
+  fsSwipeStartY = e.touches[0].clientY;
+}, { passive: true });
+fsOverlay.addEventListener('touchend', e => {
+  const dy = e.changedTouches[0].clientY - fsSwipeStartY;
+  if (dy > 80 && isFS) closeFS();
+}, { passive: true });
+
+// ── Double tap seek + Long press 2× ──
+function setupTapZones(leftEl, rightEl, skipLeftLbl, skipRightLbl, flashEl) {
+  setupDoubleTap(leftEl,  -10, skipLeftLbl);
+  setupDoubleTap(rightEl, +10, skipRightLbl);
+  setupLongPress(leftEl,  flashEl);
+  setupLongPress(rightEl, flashEl);
+}
+
+function setupDoubleTap(el, sec, lbl) {
+  let lastTap = 0;
+  el.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTap < 280) {
+      e.stopPropagation();
+      seekBy(sec);
+      // Ripple
+      const rect = el.getBoundingClientRect();
+      const r = document.createElement('div');
+      r.className = 'ripple';
+      r.style.left = (e.changedTouches[0].clientX - rect.left) + 'px';
+      r.style.top  = (e.changedTouches[0].clientY - rect.top)  + 'px';
+      el.appendChild(r);
+      setTimeout(() => r.remove(), 600);
+      // Label
+      lbl.classList.add('show');
+      setTimeout(() => lbl.classList.remove('show'), 700);
+    }
+    lastTap = now;
+  }, { passive: true });
+}
+
+let longPressTimer = null;
+let origSpeed = 1;
+let longPressActive = false;  // prevent ghost 2x from duplicate listeners
+
+function setupLongPress(el, flashEl) {
+  el.addEventListener('touchstart', () => {
+    clearTimeout(longPressTimer);
+    longPressActive = false;
+    longPressTimer = setTimeout(() => {
+      origSpeed = vid.playbackRate;
+      vid.playbackRate = 2;
+      longPressActive = true;
+      flashEl.classList.add('show');
+    }, 600);
+  }, { passive: true });
+
+  el.addEventListener('touchend', () => {
+    clearTimeout(longPressTimer);
+    if (longPressActive) {
+      vid.playbackRate = origSpeed;
+      longPressActive = false;
+      flashEl.classList.remove('show');
+    }
+  }, { passive: true });
+
+  el.addEventListener('touchcancel', () => {
+    clearTimeout(longPressTimer);
+    if (longPressActive) {
+      vid.playbackRate = origSpeed;
+      longPressActive = false;
+      flashEl.classList.remove('show');
+    }
+  }, { passive: true });
+}
+
+// Setup tap zones ONCE — normal player
+setupTapZones(
+  document.getElementById('tap-left'),
+  document.getElementById('tap-right'),
+  document.getElementById('skip-label-left'),
+  document.getElementById('skip-label-right'),
+  document.getElementById('speed-flash')
+);
+
+// FS tap zones also ONCE — not inside openFS()
+setupTapZones(
+  document.getElementById('fs-tap-left'),
+  document.getElementById('fs-tap-right'),
+  document.getElementById('fs-skip-left-lbl'),
+  document.getElementById('fs-skip-right-lbl'),
+  document.getElementById('fs-speed-flash')
+);
+document.getElementById('fs-tap-center').addEventListener('click', () => {
+  togglePlay(); showControls();
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft')  { seekBy(-10); showControls(); }
+  if (e.code === 'ArrowRight') { seekBy(+10); showControls(); }
+  if (e.code === 'ArrowUp')    { vid.volume = Math.min(1, vid.volume + 0.1); document.getElementById('vol-slider').value = vid.volume; document.getElementById('fs-vol-slider').value = vid.volume; updateVolUI(); }
+  if (e.code === 'ArrowDown')  { vid.volume = Math.max(0, vid.volume - 0.1); document.getElementById('vol-slider').value = vid.volume; document.getElementById('fs-vol-slider').value = vid.volume; updateVolUI(); }
+  if (e.code === 'KeyF') isFS ? closeFS() : openFS();
+  if (e.code === 'KeyM') toggleMute();
+});
+
+// ── Native Player Toggle ──
+let nativeMode = false;
+function toggleNative() {
+  nativeMode = !nativeMode;
+  const controls = document.getElementById('controls');
+  const tapL = document.getElementById('tap-left');
+  const tapR = document.getElementById('tap-right');
+  const btn  = document.getElementById('btn-native');
+
+  if (nativeMode) {
+    vid.setAttribute('controls', '');
+    controls.style.display = 'none';
+    tapL.style.display = 'none';
+    tapR.style.display = 'none';
+    btn.style.color = 'var(--accent)';
+    btn.title = 'Switch to custom player';
+  } else {
+    vid.removeAttribute('controls');
+    controls.style.display = '';
+    tapL.style.display = '';
+    tapR.style.display = '';
+    btn.style.color = '';
+    btn.title = 'Switch to native player';
+  }
+}
+
+// ── Format time ──
+function fmtTime(s) {
+  if (isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+// ── Enter to load ──
+document.getElementById('url-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadVideo();
+});
+
+// ── Init: show controls ──
+showControls();
+</script>
+</body>
+</html>
