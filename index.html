@@ -206,6 +206,31 @@
 
     @keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes fadeUp  {from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)}}
+
+
+    .pro-controls{
+position:absolute;
+bottom:0;
+left:0;
+right:0;
+background:linear-gradient(transparent,rgba(0,0,0,0.7));
+padding:10px;
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.pro-btn{
+color:white;
+font-size:18px;
+background:none;
+border:none;
+}
+
+.seekbar{
+flex:1;
+}
+    
   </style>
 </head>
 <body>
@@ -332,67 +357,111 @@
 
 
     
-    if (type === "video") {
 
-  const wrap = document.createElement("div");
-  wrap.style.position = "relative";
+if (type === "video") {
 
-  const video = document.createElement("video");
-  video.src = url;
-  video.playsInline = true;
-  video.preload = "metadata";
-  video.controls = false;
-  video.muted = true;
-  video.style.width = "100%";
-  video.style.borderRadius = "12px";
-  video.style.background = "#000";
+const wrap=document.createElement("div");
+wrap.style.position="relative";
 
-  // ▶ play pause on tap
-  wrap.addEventListener("click", (e)=>{
-    // agar mute button click hua to skip
-    if(e.target.classList.contains("mute-btn")) return;
+const video=document.createElement("video");
+video.src=url;
+video.playsInline=true;
+video.preload="metadata";
+video.muted=true;
+video.style.width="100%";
+video.style.background="#000";
 
-    if(video.paused){
-      pauseAllVideos();
-      video.play();
-    } else {
-      video.pause();
-    }
-  });
+wrap.appendChild(video);
 
-  // 🔊 mute button
-  const muteBtn = document.createElement("div");
-  muteBtn.innerHTML = "🔇";
-  muteBtn.className = "mute-btn";
-  muteBtn.style.position="absolute";
-  muteBtn.style.bottom="10px";
-  muteBtn.style.right="10px";
-  muteBtn.style.background="rgba(0,0,0,0.6)";
-  muteBtn.style.color="#fff";
-  muteBtn.style.padding="6px 10px";
-  muteBtn.style.borderRadius="20px";
-  muteBtn.style.fontSize="12px";
+// ▶ autoplay when visible
+const observer=new IntersectionObserver(entries=>{
+ entries.forEach(e=>{
+   if(e.isIntersecting){
+     pauseAllVideos();
+     video.play().catch(()=>{});
+   }else{
+     video.pause();
+   }
+ });
+},{threshold:0.6});
+observer.observe(video);
 
-  muteBtn.onclick=(e)=>{
-    e.stopPropagation();
-    video.muted = !video.muted;
-    muteBtn.innerHTML = video.muted ? "🔇" : "🔊";
-  };
+// ▶ tap play pause
+wrap.addEventListener("click",(e)=>{
+ if(e.target.classList.contains("control")) return;
 
-  // fullscreen on double tap
-  let lastTap = 0;
-  wrap.addEventListener("touchend",(e)=>{
-    const now = Date.now();
-    if(now-lastTap<300){
-      openVideoFullscreen(video);
-    }
-    lastTap = now;
-  });
+ if(video.paused){
+   pauseAllVideos();
+   video.play();
+ }else{
+   video.pause();
+ }
+});
 
-  wrap.appendChild(video);
-  wrap.appendChild(muteBtn);
-  content.appendChild(wrap);
+// 🎛 controls
+const controls=document.createElement("div");
+controls.className="pro-controls";
 
+// play btn
+const playBtn=document.createElement("button");
+playBtn.innerHTML="▶";
+playBtn.className="pro-btn control";
+
+playBtn.onclick=(e)=>{
+ e.stopPropagation();
+ if(video.paused){
+   pauseAllVideos();
+   video.play();
+ }else video.pause();
+};
+
+// mute
+const muteBtn=document.createElement("button");
+muteBtn.innerHTML="🔇";
+muteBtn.className="pro-btn control";
+
+muteBtn.onclick=(e)=>{
+ e.stopPropagation();
+ video.muted=!video.muted;
+ muteBtn.innerHTML=video.muted?"🔇":"🔊";
+};
+
+// fullscreen
+const fsBtn=document.createElement("button");
+fsBtn.innerHTML="⛶";
+fsBtn.className="pro-btn control";
+
+fsBtn.onclick=(e)=>{
+ e.stopPropagation();
+ openVideoFullscreen(video);
+};
+
+// seekbar
+const seek=document.createElement("input");
+seek.type="range";
+seek.min=0;
+seek.max=100;
+seek.value=0;
+seek.className="seekbar control";
+
+video.ontimeupdate=()=>{
+ if(video.duration){
+   seek.value=(video.currentTime/video.duration)*100;
+ }
+};
+
+seek.oninput=(e)=>{
+ video.currentTime=(seek.value/100)*video.duration;
+};
+
+controls.appendChild(playBtn);
+controls.appendChild(muteBtn);
+controls.appendChild(seek);
+controls.appendChild(fsBtn);
+
+wrap.appendChild(controls);
+content.appendChild(wrap);
+  
 
 } else if (type === "image") {
 
@@ -648,44 +717,75 @@ function pauseAllVideos(){
     v.pause();
   });
   }
+
+
+  function toggleFSPlay(){
+const v=document.getElementById("fs-video");
+if(v.paused) v.play(); else v.pause();
+}
+
+function toggleFSMute(){
+const v=document.getElementById("fs-video");
+v.muted=!v.muted;
+}
+
+function rotateVideo(){
+const v=document.getElementById("fs-video");
+if(!v.dataset.rot) v.dataset.rot=0;
+v.dataset.rot=parseInt(v.dataset.rot)+90;
+v.style.transform=`rotate(${v.dataset.rot}deg)`;
+}
+
+const fsSeek=document.getElementById("fsSeek");
+const fsVideo=document.getElementById("fs-video");
+
+fsVideo?.addEventListener("timeupdate",()=>{
+ if(fsVideo.duration){
+   fsSeek.value=(fsVideo.currentTime/fsVideo.duration)*100;
+ }
+});
+
+fsSeek?.addEventListener("input",()=>{
+ fsVideo.currentTime=(fsSeek.value/100)*fsVideo.duration;
+});
   
-let currentInlineVideo = null;
+let currentInlineVideo=null;
 
 function openVideoFullscreen(videoEl){
-  const fs = document.getElementById("video-fullscreen");
-  const fsVideo = document.getElementById("fs-video");
+const fs=document.getElementById("video-fullscreen");
+const fsVideo=document.getElementById("fs-video");
 
-  pauseAllVideos();
+pauseAllVideos();
 
-  currentInlineVideo = videoEl;
-  fs.style.display = "flex";
+currentInlineVideo=videoEl;
+fs.style.display="flex";
 
-  fsVideo.src = videoEl.src;
-  fsVideo.currentTime = videoEl.currentTime;
-  fsVideo.muted = videoEl.muted;
+fsVideo.src=videoEl.src;
+fsVideo.currentTime=videoEl.currentTime;
+fsVideo.muted=videoEl.muted;
 
-  fsVideo.play();
-  videoEl.pause();
+fsVideo.play();
+videoEl.pause();
 
-  fsVideo.ontimeupdate = ()=>{
-    if(currentInlineVideo){
-      currentInlineVideo.currentTime = fsVideo.currentTime;
-    }
-  };
+fsVideo.ontimeupdate=()=>{
+ if(currentInlineVideo){
+   currentInlineVideo.currentTime=fsVideo.currentTime;
+ }
+};
 }
 
 function closeFS(){
-  const fs = document.getElementById("video-fullscreen");
-  const fsVideo = document.getElementById("fs-video");
+const fs=document.getElementById("video-fullscreen");
+const fsVideo=document.getElementById("fs-video");
 
-  if(currentInlineVideo){
-    currentInlineVideo.currentTime = fsVideo.currentTime;
-    if(!fsVideo.paused) currentInlineVideo.play();
-  }
+if(currentInlineVideo){
+ currentInlineVideo.currentTime=fsVideo.currentTime;
+ if(!fsVideo.paused) currentInlineVideo.play();
+}
 
-  fsVideo.pause();
-  fsVideo.src="";
-  fs.style.display="none";
+fsVideo.pause();
+fsVideo.src="";
+fs.style.display="none";
 }
   
   initPi();
@@ -697,18 +797,22 @@ inset:0;
 background:black;
 z-index:99999;
 display:none;
-align-items:center;
-justify-content:center;
+flex-direction:column;
 ">
-  <video id="fs-video" style="width:100%;height:100%;object-fit:contain;" playsinline></video>
 
-  <button onclick="closeFS()" style="
-  position:absolute;top:15px;right:15px;
-  background:rgba(255,255,255,0.2);
-  border:none;color:white;
-  font-size:18px;padding:10px 14px;
-  border-radius:50%;
-  ">✕</button>
+<div style="position:absolute;top:10px;right:10px;z-index:2;">
+<button onclick="rotateVideo()" style="font-size:18px;margin-right:10px;">🔄</button>
+<button onclick="closeFS()" style="font-size:18px;">✕</button>
+</div>
+
+<video id="fs-video" style="width:100%;height:100%;object-fit:contain;" playsinline></video>
+
+<div class="pro-controls">
+<button onclick="toggleFSPlay()" class="pro-btn">⏯</button>
+<button onclick="toggleFSMute()" class="pro-btn">🔊</button>
+<input type="range" id="fsSeek" class="seekbar">
+</div>
+
   </div>
   
 </body>
