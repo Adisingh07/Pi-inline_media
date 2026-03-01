@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pi Inline Media Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #2a2a3a;
+      --accent: #7c5cfc;
+      --accent2: #fc5c7d;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Status Badge */
+    #status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      margin: 0 auto 32px;
+      display: flex;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeDown 0.6s 0.1s ease both;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    .dot.checking { background: #f5c518; animation: pulse 1s infinite; }
+    .dot.supported { background: #4ade80; }
+    .dot.unsupported { background: var(--accent2); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* Input Section */
+    .input-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+
+    .input-section h2 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    button {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:active { opacity: 0.85; transform: scale(0.97); }
+
+    /* Media Container */
+    #media-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeUp 0.5s 0.3s ease both;
+    }
+
+    .media-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .media-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .media-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .type-tag {
+      background: rgba(124,92,252,0.15);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .remove-btn {
+      background: transparent;
+      color: var(--muted);
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .remove-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+
+    .media-content { padding: 12px; }
+
+    video, img {
+      width: 100%;
+      border-radius: 10px;
+      display: block;
+      background: var(--bg);
+    }
+
+    video {
+      max-height: 260px;
+      object-fit: contain;
+    }
+
+    img {
+      max-height: 300px;
+      object-fit: contain;
+    }
+
+    /* Fallback */
+    .fallback-card {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .fallback-card a {
+      color: var(--accent2);
+      word-break: break-all;
+    }
+
+    /* Empty state */
+    #empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+    }
+    #empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Pi Inline Media Tester</h1>
+    <p>Pi.nativeFeaturesList() → inline_media check</p>
+  </header>
+
+  <div id="status-badge">
+    <span class="dot checking" id="dot"></span>
+    <span id="status-text">Checking inline_media support...</span>
+  </div>
+
+  <div class="input-section">
+    <h2>📎 Media URL daalo</h2>
+    <div class="input-row">
+      <input type="text" id="url-input" placeholder="https://example.com/video.mp4 ya image.jpg"/>
+      <button onclick="addMedia()">Add</button>
+    </div>
+  </div>
+
+  <div id="media-container">
+    <div id="empty-state">
+      <div class="icon">🎬</div>
+      Koi media nahi hai abhi.<br/>Upar URL daalo aur Add karo.
+    </div>
+  </div>
+
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+  Pi.init({ version: "2.0", sandbox: true }); // sandbox: false karo production mein
+
+  let inlineMediaSupported = false;
+
+  async function initPi() {
+    const dot = document.getElementById("dot");
+    const statusText = document.getElementById("status-text");
+
+    try {
+      const features = await Pi.nativeFeaturesList();
+      inlineMediaSupported = features.includes("inline_media");
+
+      dot.className = "dot " + (inlineMediaSupported ? "supported" : "unsupported");
+      statusText.textContent = inlineMediaSupported
+        ? "✓ inline_media supported — Pi Browser render karega"
+        : "✗ inline_media not supported — fallback mode";
+    } catch (e) {
+      dot.className = "dot unsupported";
+      statusText.textContent = "Pi SDK unavailable — fallback mode";
+    }
+  }
+
+  function detectType(url) {
+    const ext = url.split('?')[0].split('.').pop().toLowerCase();
+    if (["mp4","webm","ogg","mov"].includes(ext)) return "video";
+    if (["jpg","jpeg","png","gif","webp","svg","avif"].includes(ext)) return "image";
+    // YouTube check
+    if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
+    return "unknown";
+  }
+
+  function getYouTubeId(url) {
+    const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  }
+
+  function addMedia() {
+    const input = document.getElementById("url-input");
+    const url = input.value.trim();
+    if (!url) return;
+
+    // Remove empty state
+    const empty = document.getElementById("empty-state");
+    if (empty) empty.remove();
+
+    const type = detectType(url);
+    const container = document.getElementById("media-container");
+
+    const card = document.createElement("div");
+    card.className = "media-card";
+
+    const id = Date.now();
+
+    card.innerHTML = `
+      <div class="media-card-header">
+        <div class="media-label">
+          <span class="type-tag">${type}</span>
+          <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
+        </div>
+        <button class="remove-btn" onclick="removeCard(${id})">✕</button>
+      </div>
+      <div class="media-content" id="content-${id}"></div>
+    `;
+
+    container.appendChild(card);
+    card.id = `card-${id}`;
+
+    const content = document.getElementById(`content-${id}`);
+
+    if (inlineMediaSupported) {
+      // Inline render
+      if (type === "video") {
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.playsInline = true;
+        video.setAttribute("webkit-playsinline", "true");
+        video.preload = "metadata";
+        content.appendChild(video);
+
+      } else if (type === "image") {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "Inline Image";
+        img.loading = "lazy";
+        content.appendChild(img);
+
+      } else if (type === "youtube") {
+        const ytId = getYouTubeId(url);
+        if (ytId) {
+          const iframe = document.createElement("iframe");
+          iframe.src = `https://www.youtube.com/embed/${ytId}`;
+          iframe.style.cssText = "width:100%;height:200px;border:none;border-radius:10px;";
+          iframe.allowFullscreen = true;
+          content.appendChild(iframe);
+        }
+
+      } else {
+        // Unknown type — try video first
+        content.innerHTML = `<p style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);padding:8px;">Unknown type — direct link: <a href="${url}" target="_blank" style="color:var(--accent2)">${url}</a></p>`;
+      }
+
+    } else {
+      // Fallback — no inline support
+      content.innerHTML = `
+        <div class="fallback-card">
+          inline_media support nahi hai.<br/>
+          <a href="${url}" target="_blank">${url}</a>
+        </div>`;
+    }
+
+    input.value = "";
+  }
+
+  function removeCard(id) {
+    const card = document.getElementById(`card-${id}`);
+    if (card) card.remove();
+
+    if (document.getElementById("media-container").children.length === 0) {
+      document.getElementById("media-container").innerHTML = `
+        <div id="empty-state">
+          <div class="icon">🎬</div>
+          Koi media nahi hai abhi.<br/>Upar URL daalo aur Add karo.
+        </div>`;
+    }
+  }
+
+  // Enter key support
+  document.getElementById("url-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") addMedia();
+  });
+
+  initPi();
+</script>
+</body>
+</html>
