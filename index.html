@@ -333,20 +333,66 @@
 
     
     if (type === "video") {
+
+  const wrap = document.createElement("div");
+  wrap.style.position = "relative";
+
   const video = document.createElement("video");
   video.src = url;
   video.playsInline = true;
   video.preload = "metadata";
   video.controls = false;
   video.muted = true;
+  video.style.width = "100%";
+  video.style.borderRadius = "12px";
+  video.style.background = "#000";
 
-  video.style.cursor = "pointer";
+  // ▶ play pause on tap
+  wrap.addEventListener("click", (e)=>{
+    // agar mute button click hua to skip
+    if(e.target.classList.contains("mute-btn")) return;
 
-  video.addEventListener("click", () => {
-    openVideoFullscreen(video);
+    if(video.paused){
+      pauseAllVideos();
+      video.play();
+    } else {
+      video.pause();
+    }
   });
 
-  content.appendChild(video);
+  // 🔊 mute button
+  const muteBtn = document.createElement("div");
+  muteBtn.innerHTML = "🔇";
+  muteBtn.className = "mute-btn";
+  muteBtn.style.position="absolute";
+  muteBtn.style.bottom="10px";
+  muteBtn.style.right="10px";
+  muteBtn.style.background="rgba(0,0,0,0.6)";
+  muteBtn.style.color="#fff";
+  muteBtn.style.padding="6px 10px";
+  muteBtn.style.borderRadius="20px";
+  muteBtn.style.fontSize="12px";
+
+  muteBtn.onclick=(e)=>{
+    e.stopPropagation();
+    video.muted = !video.muted;
+    muteBtn.innerHTML = video.muted ? "🔇" : "🔊";
+  };
+
+  // fullscreen on double tap
+  let lastTap = 0;
+  wrap.addEventListener("touchend",(e)=>{
+    const now = Date.now();
+    if(now-lastTap<300){
+      openVideoFullscreen(video);
+    }
+    lastTap = now;
+  });
+
+  wrap.appendChild(video);
+  wrap.appendChild(muteBtn);
+  content.appendChild(wrap);
+
 
 } else if (type === "image") {
 
@@ -597,30 +643,34 @@ function applyLb() {
   document.getElementById("carousel-url-input").addEventListener("keydown", e => { if(e.key==="Enter") addCarouselUrl(); });
 
 
-
+function pauseAllVideos(){
+  document.querySelectorAll("video").forEach(v=>{
+    v.pause();
+  });
+  }
+  
 let currentInlineVideo = null;
 
 function openVideoFullscreen(videoEl){
   const fs = document.getElementById("video-fullscreen");
   const fsVideo = document.getElementById("fs-video");
 
-  currentInlineVideo = videoEl;
+  pauseAllVideos();
 
+  currentInlineVideo = videoEl;
   fs.style.display = "flex";
 
   fsVideo.src = videoEl.src;
   fsVideo.currentTime = videoEl.currentTime;
+  fsVideo.muted = videoEl.muted;
 
-  if(!videoEl.paused){
-    fsVideo.play();
-  }
-
+  fsVideo.play();
   videoEl.pause();
 
-  fsVideo.onplay = ()=> videoEl.play();
-  fsVideo.onpause = ()=> videoEl.pause();
   fsVideo.ontimeupdate = ()=>{
-    videoEl.currentTime = fsVideo.currentTime;
+    if(currentInlineVideo){
+      currentInlineVideo.currentTime = fsVideo.currentTime;
+    }
   };
 }
 
@@ -634,6 +684,7 @@ function closeFS(){
   }
 
   fsVideo.pause();
+  fsVideo.src="";
   fs.style.display="none";
 }
   
